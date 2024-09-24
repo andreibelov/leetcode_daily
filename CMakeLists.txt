@@ -51,3 +51,4 @@ set(COMMON_CFLAGS
 add_subdirectory(two_sum)
 add_subdirectory(lexicographical_numbers)
 add_subdirectory(k_smallest_lexical_order)
+add_subdirectory(extra_characters_in_string)

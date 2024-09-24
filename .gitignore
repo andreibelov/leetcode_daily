@@ -15,6 +15,7 @@ build/
 gdb.txt
 /two_sum/two_sum
 /lexicographical_numbers/lexicographical_numbers
+/extra_characters_in_string/extra_characters_in_string
 
 # From https://stackoverflow.com/questions/15606955/:
 # If you want to list all the files currently being tracked:
