@@ -19,6 +19,7 @@ project(leetcode_daily C)
 set(CMAKE_C_STANDARD 11)
 
 set(COMMON_LDFLAGS
+        -lm
         -fsanitize=address
         -fsanitize=undefined
         -fno-sanitize-recover
@@ -52,3 +53,4 @@ add_subdirectory(two_sum)
 add_subdirectory(lexicographical_numbers)
 add_subdirectory(k_smallest_lexical_order)
 add_subdirectory(extra_characters_in_string)
+add_subdirectory(longest_common_prefix)
