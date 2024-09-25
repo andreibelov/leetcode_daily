@@ -32,6 +32,13 @@ typedef struct TwoDArray
 	int size;
 }	TwoDArray;
 
+typedef struct StringArray
+{
+	char **arr;
+	int size;
+}	StringArray;
+
+
 enum
 {
 	null = INT_MIN
@@ -57,6 +64,20 @@ void check(bool succes)
 		printf("> "FT_RED".KO "FT_RESET"\n");
 }
 
+void ft_print_str_tab(char **tab,  size_t size, const char *eol)
+{
+	size_t pos;
+
+	pos = 0;
+	printf("[");
+	if (pos < size)
+		printf("\"%s\"", tab[pos++]);
+	while (pos < size)
+		printf(", \"%s\"", tab[pos++]);
+	printf("]%s", (!eol) ? "\n" : eol);
+}
+
+
 void ft_print_int_tab(int tab[], size_t size, const char *eol)
 {
 	size_t pos;
@@ -67,11 +88,7 @@ void ft_print_int_tab(int tab[], size_t size, const char *eol)
 		printf("%d", tab[pos++]);
 	while (pos < size)
 		printf(", %d", tab[pos++]);
-	printf("]");
-	if (!eol)
-		printf("\n");
-	else
-		printf("%s", eol);
+	printf("]%s", (!eol) ? "\n" : eol);
 }
 
 void ft_print_int_tab_null(int tab[], size_t size, int nil, const char *eol)
