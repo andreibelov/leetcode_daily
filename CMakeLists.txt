@@ -31,6 +31,7 @@ set(COMMON_CFLAGS
         -Wwrite-strings
         -Wimplicit
         -Wno-error=unused-parameter
+        -Wno-error=unused-variable
         -O0
         -masm=att
         -fno-exceptions
@@ -55,3 +56,7 @@ add_subdirectory(k_smallest_lexical_order)
 add_subdirectory(extra_characters_in_string)
 add_subdirectory(longest_common_prefix)
 add_subdirectory(sum_of_prefix_scores)
+add_subdirectory(my_calendar_i)
+add_subdirectory(my_calendar_ii)
+add_subdirectory(valid_parentheses)
+add_subdirectory(remove_invalid_parentheses)
