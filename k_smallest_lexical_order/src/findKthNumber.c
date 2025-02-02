@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include <stdlib.h>
+#include <sys/param.h>
 
 /**
  * 440. K-th Smallest in Lexicographical Order
@@ -31,8 +32,6 @@ int findKthNumber(int n, int k);
  * efficiently counting the possible numbers that start with a given prefix.
  */
 
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-
 /**
  * function count_steps() calculates the total count of numbers between
  * result and result + 1 that could be considered candidates.
@@ -42,7 +41,7 @@ int count_steps(long long n, long long lower, long long upper)
 	long long steps = 0;
 	while (lower <= n)
 	{
-		steps += min(n + 1, upper) - lower;
+		steps += MIN(n + 1, upper) - lower;
 		lower *= 10;
 		upper *= 10;
 	}

@@ -12,6 +12,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 
 /**
  * 2707. Extra Characters in a String
@@ -26,7 +27,6 @@
  */
 int minExtraChar(char *s, char **dictionary, int dictionarySize);
 
-#define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 int minExtraChar(char *s, char **dictionary, int dictionarySize)
 {
 	int i,j,k,h;
@@ -40,7 +40,7 @@ int minExtraChar(char *s, char **dictionary, int dictionarySize)
 	i = 0;
 	while (++i < length)
 	{
-		dp[i] = min(dp[i], dp[i - 1] + 1);
+		dp[i] = MIN(dp[i], dp[i - 1] + 1);
 
 		j = -1;
 		while (++j < dictionarySize)
@@ -53,7 +53,7 @@ int minExtraChar(char *s, char **dictionary, int dictionarySize)
 				{
 					if (k == -1)
 					{
-						dp[i] = min(dp[i], dp[h + 1]);
+						dp[i] = MIN(dp[i], dp[h + 1]);
 						break;
 					}
 				}

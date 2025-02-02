@@ -16,6 +16,7 @@ gdb.txt
 /two_sum/two_sum
 /lexicographical_numbers/lexicographical_numbers
 /extra_characters_in_string/extra_characters_in_string
+/k_smallest_lexical_order/k_smallest_lexical_order
 /longest_common_prefix/longest_common_prefix
 /sum_of_prefix_scores/sum_of_prefix_scores
 /my_calendar_i/my_calendar_i

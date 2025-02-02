@@ -110,6 +110,70 @@ void searchValidExpressions(char *s, int len, int leftCount, int rightCount)
 	free(stack);
 }
 
+void searchValidExpressionsRec(char *s, int len, int index, int leftCount,
+							   int rightCount, int leftAccumulated,
+							   int rightAccumulated, char *currentExpression, int pos)
+{
+	if (index == len)
+	{
+		if (leftCount == 0 && rightCount == 0)
+		{
+			currentExpression[pos] = '\0';
+			hash_insert(&hash, currentExpression);
+		}
+		return;
+	}
+
+	// Early termination if we don't have enough parentheses left to remove
+	if (len - index < leftCount + rightCount || leftAccumulated < rightAccumulated)
+		return;
+
+	// If it's a left parenthesis, and we can remove it, recurse without including it
+	if (s[index] == '(' && leftCount)
+		searchValidExpressionsRec(s, len, index + 1, leftCount - 1, rightCount, leftAccumulated, rightAccumulated,
+							   currentExpression, pos);
+
+	// If it's a right parenthesis, and we can remove it, recurse without including it
+	if (s[index] == ')' && rightCount)
+		searchValidExpressionsRec(s, len, index + 1, leftCount, rightCount - 1, leftAccumulated, rightAccumulated,
+							   currentExpression, pos);
+
+	// Determine whether the current character is a left or right parenthesis
+	int increaseLeft = s[index] == '(' ? 1 : 0;
+	int increaseRight = s[index] == ')' ? 1 : 0;
+
+	currentExpression[pos] = s[index];
+	// Recurse to the next character in the string, including the current character in the expression
+	searchValidExpressionsRec(s, len, index + 1, leftCount, rightCount, leftAccumulated + increaseLeft,
+						   rightAccumulated + increaseRight, currentExpression, pos + 1);
+}
+
+void dfs(hash_t **t, char *s, int leftCount, int rightCount, char res[], int pos, int weight)
+{
+	if (*s)
+	{
+		if (*s == ')')
+		{
+			if (weight)
+			{
+				res[pos] = *s;
+				dfs(t, s + 1, leftCount, rightCount, res, pos + 1, weight - 1);
+			}
+			if (rightCount)
+				dfs(t, s + 1, leftCount, rightCount - 1, res, pos, weight);
+		}
+		else
+		{
+			res[pos] = *s;
+			dfs(t, s + 1, leftCount, rightCount, res, pos + 1, weight + (*s == '('));
+
+			if (*s == '(' && leftCount)
+				dfs(t, s + 1, leftCount - 1, rightCount, res, pos, weight);
+		}
+	}
+	else if (leftCount == 0 && rightCount == 0) res[pos] = '\0', hash_insert(t, res);
+}
+
 char **removeInvalidParentheses(char *s, int *returnSize)
 {
 	int leftCount = 0, rightCount = 0;
