@@ -23,6 +23,7 @@ gdb.txt
 /my_calendar_ii/my_calendar_ii
 /valid_parentheses/valid_parentheses
 /remove_invalid_parentheses/remove_invalid_parentheses
+/pascals_triangle/pascals_triangle
 
 # From https://stackoverflow.com/questions/15606955/:
 # If you want to list all the files currently being tracked:

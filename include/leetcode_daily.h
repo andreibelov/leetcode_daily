@@ -24,6 +24,7 @@ typedef struct Array
 {
 	int *arr;
 	int size;
+	int iter;
 }	Array;
 
 typedef struct TwoDArray
@@ -71,6 +72,19 @@ int compare_strings(const void* a, const void* b)
 	return strcmp(str1, str2); // Lexicographic comparison
 }
 
+int arraycmp(Array *p, Array *q)
+{
+	int ret;
+
+	if (!p || !q)
+		return (-1);
+
+	ret = p->size - p->size;
+	if (!ret)
+		ret = memcmp(p->arr, q->arr, p->size * sizeof(int));
+	return (ret);
+}
+
 void ft_print_str_tab(char **tab,  size_t size, const char *eol)
 {
 	size_t pos;
@@ -96,6 +110,12 @@ void ft_print_int_tab(int tab[], size_t size, const char *eol)
 	while (pos < size)
 		printf(", %d", tab[pos++]);
 	printf("]%s", (!eol) ? "\n" : eol);
+}
+
+void ft_print_array(Array *a, const char *eol)
+{
+	if (a)
+		ft_print_int_tab(a->arr, a->size, eol);
 }
 
 void ft_print_int_tab_null(int tab[], size_t size, int nil, const char *eol)
