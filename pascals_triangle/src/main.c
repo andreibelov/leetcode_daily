@@ -47,7 +47,7 @@ int ft_do_test(struct s_test_case *testcase)
 	arrays = generate(testcase->numRows, &res.size, &sizes);
 	i = -1;
 	while (++i < res.size)
-		res.arrays[i] = (Array) {.arr = arrays[i], .size = sizes[i], .iter = 0};
+		res.arrays[i] = (Array) {.arr = arrays[i], .size = sizes[i]};
 
 	check_val = (res.size == testcase->expected.size);
 	if (!check_val)

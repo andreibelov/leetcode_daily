@@ -24,6 +24,7 @@ gdb.txt
 /valid_parentheses/valid_parentheses
 /remove_invalid_parentheses/remove_invalid_parentheses
 /pascals_triangle/pascals_triangle
+/pascals_triangle_ii/pascals_triangle_ii
 
 # From https://stackoverflow.com/questions/15606955/:
 # If you want to list all the files currently being tracked:
