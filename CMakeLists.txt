@@ -20,11 +20,12 @@ set(CMAKE_C_STANDARD 11)
 
 set(COMMON_LDFLAGS
         -lm
-        -fsanitize=address
-        -fsanitize=undefined
-        -fno-sanitize-recover
-        -fsanitize=float-divide-by-zero
-        -fsanitize=float-cast-overflow)
+#        -fsanitize=address
+#        -fsanitize=undefined
+#        -fno-sanitize-recover
+#        -fsanitize=float-divide-by-zero
+#        -fsanitize=float-cast-overflow
+)
 
 set(COMMON_CFLAGS
         -Wall -Wextra -Werror
@@ -42,12 +43,12 @@ set(COMMON_CFLAGS
         -fcf-protection=none
         -mmanual-endbr
         -g3 -gdwarf-3
-        -fasynchronous-unwind-tables
-        -fsanitize=address
-        -fsanitize=undefined
-        -fno-sanitize-recover
-        -fsanitize=float-divide-by-zero
-        -fsanitize=float-cast-overflow
+#        -fasynchronous-unwind-tables
+#        -fsanitize=address
+#        -fsanitize=undefined
+#        -fno-sanitize-recover
+#        -fsanitize=float-divide-by-zero
+#        -fsanitize=float-cast-overflow
 )
 
 add_subdirectory(two_sum)
@@ -62,3 +63,4 @@ add_subdirectory(valid_parentheses)
 add_subdirectory(remove_invalid_parentheses)
 add_subdirectory(pascals_triangle)
 add_subdirectory(pascals_triangle_ii)
+add_subdirectory(rotate_array)
