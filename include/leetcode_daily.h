@@ -19,6 +19,26 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <limits.h>
+#include <unistd.h>
+
+#ifndef USING_ASAN
+#  if defined(__has_feature)
+#    if __has_feature(address_sanitizer)
+#      define USING_ASAN 1
+#    endif
+#  endif
+#endif
+
+#ifndef USING_ASAN
+/* GCC and newer Clang define __SANITIZE_ADDRESS__ with -fsanitize=address */
+#  ifdef __SANITIZE_ADDRESS__
+#    define USING_ASAN 1
+#  endif
+#endif
+
+#ifndef USING_ASAN
+#  define USING_ASAN 0
+#endif
 
 typedef struct Array
 {
@@ -29,9 +49,16 @@ typedef struct Array
 
 typedef struct TwoDArray
 {
-	Array *arrays;
-	int size;
+	Array	*arrays;
+	int		size;
 }	TwoDArray;
+
+typedef struct Grid
+{
+	int	rows;
+	int	cols;
+	int	*a;    /* rows * cols, row-major */
+}	Grid;
 
 typedef struct StringArray
 {
@@ -57,12 +84,74 @@ void sigsegv(int signal)
 	exit(EXIT_SUCCESS);
 }
 
+void sigsegv2(int signal)
+{
+	const char msg[] = FT_CYAN".SIGSEGV"FT_RESET"\n";
+	ssize_t n = write(STDERR_FILENO, msg, sizeof(msg) - 1);
+	(void)n;
+
+	/* Restore default and re-raise for core dump */
+	struct sigaction sa;
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGSEGV, &sa, NULL);
+	raise(SIGSEGV);
+
+	_exit(128 + signal); /* fallback */
+}
+
+/**
+ * https://geoffrichards.co.uk/blog/2019/09/c-backtrace/
+ * https://scaryreasoner.wordpress.com/2007/11/17/using-ld_preload-libraries-and-glibc-backtrace-function-for-debugging/
+ * @param signo
+ */
+extern inline
+void segv_handler(int signo)
+{
+	const char msg[] = FT_CYAN".SIGSEGV"FT_RESET"\n";
+	write(STDERR_FILENO, msg, sizeof(msg) - 1);
+
+	pid_t pid = fork();
+	if (pid == 0) {
+		/* Child: exec crash helper. Pass PID to inspect via /proc. */
+		char pidbuf[32];
+		int len = 0;
+		/* minimal itoa without snprintf to avoid non-signal-safe calls */
+		{
+			unsigned long p = (unsigned long)getppid();
+			char tmp[32];
+			int i = 0;
+			if (p == 0) { tmp[i++] = '0'; }
+			while (p > 0 && i < (int)sizeof(tmp)) {
+				tmp[i++] = '0' + (p % 10);
+				p /= 10;
+			}
+			while (i > 0 && len < (int)sizeof(pidbuf)) {
+				pidbuf[len++] = tmp[--i];
+			}
+			if (len == 0) { pidbuf[len++] = '0'; }
+			if (len < (int)sizeof(pidbuf)) pidbuf[len++] = '\0';
+		}
+		const char *argv[] = { "/usr/bin/my-crash-dumper", pidbuf, NULL };
+		execve(argv[0], (char * const *)argv, __environ); /* environ is OK to reuse */
+		_exit(127);
+	}
+
+	/* Parent: either wait minimally or just re-raise for core */
+	struct sigaction sa;
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGSEGV, &sa, NULL);
+	raise(SIGSEGV);
+	_exit(128 + signo);
+}
+
 void check(bool succes)
 {
-	if (succes)
-		printf("> "FT_GREEN".OK "FT_RESET"\n");
-	else
-		printf("> "FT_RED".KO "FT_RESET"\n");
+	const char *fmt = succes ? FT_GREEN".OK" : FT_RED".KO";
+	printf("> %s "FT_RESET"\n", fmt);
 }
 
 int compare_strings(const void* a, const void* b)
@@ -82,6 +171,26 @@ int arraycmp(Array *p, Array *q)
 	ret = p->size - p->size;
 	if (!ret)
 		ret = memcmp(p->arr, q->arr, p->size * sizeof(int));
+	return (ret);
+}
+
+int strarraycmp(StringArray *p, StringArray *q)
+{
+	int ret;
+
+	if (!p || !q)
+		return (-1);
+
+	ret = p->size - p->size;
+	if (!ret)
+	{
+		int i = -1;
+		while (++i < p->size)
+		{
+			ret = strcmp(p->arr[i], q->arr[i]);
+			if (ret) break;
+		}
+	}
 	return (ret);
 }
 
@@ -112,10 +221,16 @@ void ft_print_int_tab(int tab[], size_t size, const char *eol)
 	printf("]%s", (!eol) ? "\n" : eol);
 }
 
-void ft_print_array(Array *a, const char *eol)
+void ft_print_array_eol(Array *a, const char *eol)
 {
 	if (a)
 		ft_print_int_tab(a->arr, a->size, eol);
+}
+
+void ft_print_array(Array *a)
+{
+	if (a)
+		ft_print_int_tab(a->arr, a->size, NULL);
 }
 
 void ft_print_int_tab_null(int tab[], size_t size, int nil, const char *eol)

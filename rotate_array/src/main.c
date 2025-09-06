@@ -57,7 +57,7 @@ int ft_do_test(Input *input)
 			check(check_val);
 			printf("got ");
 			ft_print_int_tab((int *)(*result), nums->size, " whilst ");
-			ft_print_array(&input->expected, "");
+			ft_print_array_eol(&input->expected, "");
 			printf(" was to be expected \n");
 		}
 	}

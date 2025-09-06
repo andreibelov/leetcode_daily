@@ -26,13 +26,14 @@ gdb.txt
 /pascals_triangle/pascals_triangle
 /pascals_triangle_ii/pascals_triangle_ii
 /rotate_array/rotate_array
-
+/game_of_life/game_of_life
+main
 # From https://stackoverflow.com/questions/15606955/:
 # If you want to list all the files currently being tracked:
 # `git ls-tree --full-tree --name-only -r HEAD`
 # If you want a list of files that ever existed (i.e. including deleted files):
 # `git log --pretty=format: --name-only --diff-filter=A | sort - | sed '/^$/d'`
-main
+
 ### C template
 # Prerequisites
 *.d

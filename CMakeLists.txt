@@ -12,19 +12,26 @@
 
 cmake_minimum_required(VERSION 3.27)
 
+
+#set(CMAKE_C_COMPILER clang)
+set(CMAKE_C_COMPILER gcc-13)
+
 include_directories(include)
 
 project(leetcode_daily C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_EXTENSIONS ON)
 
 set(COMMON_LDFLAGS
-        -lm
-#        -fsanitize=address
-#        -fsanitize=undefined
-#        -fno-sanitize-recover
-#        -fsanitize=float-divide-by-zero
-#        -fsanitize=float-cast-overflow
+		-fsanitize=address,undefined,bounds,alignment,object-size
+		-fsanitize=shift,signed-integer-overflow,null,return
+		-fsanitize=float-divide-by-zero,float-cast-overflow
+		-fno-sanitize-recover
+)
+
+set(COMMON_LIBS
+		m
 )
 
 set(COMMON_CFLAGS
@@ -43,12 +50,11 @@ set(COMMON_CFLAGS
         -fcf-protection=none
         -mmanual-endbr
         -g3 -gdwarf-3
-#        -fasynchronous-unwind-tables
-#        -fsanitize=address
-#        -fsanitize=undefined
-#        -fno-sanitize-recover
-#        -fsanitize=float-divide-by-zero
-#        -fsanitize=float-cast-overflow
+        -fasynchronous-unwind-tables
+		-fsanitize=address,undefined,bounds,alignment,object-size
+		-fsanitize=shift,signed-integer-overflow,null,return
+		-fsanitize=float-divide-by-zero,float-cast-overflow
+		-fno-sanitize-recover
 )
 
 add_subdirectory(two_sum)
@@ -64,3 +70,4 @@ add_subdirectory(remove_invalid_parentheses)
 add_subdirectory(pascals_triangle)
 add_subdirectory(pascals_triangle_ii)
 add_subdirectory(rotate_array)
+add_subdirectory(game_of_life)

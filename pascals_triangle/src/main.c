@@ -67,8 +67,8 @@ int ft_do_test(struct s_test_case *testcase)
 			{
 				check(check_val);
 				printf("at index [%d] got ", i);
-				ft_print_array(p, " whilst ");
-				ft_print_array(q, "");
+				ft_print_array_eol(p, " whilst ");
+				ft_print_array_eol(q, "");
 				printf(" was to be expected \n");
 				free(p->arr);
 				while(++(i) < res.size)
