@@ -43,7 +43,8 @@ main
 *.ko
 *.obj
 *.elf
-
+*.core
+*.dump
 # Linker output
 *.ilk
 *.map

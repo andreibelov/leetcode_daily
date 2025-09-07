@@ -113,45 +113,40 @@ void gameOfLife2(int **board, int boardSize, const int *boardColSize)
 	if (!counts)
 		return (void) (fprintf(stderr, "gameOfLife: alloc failed: %m\n"));
 
-	int *rows[SLOTS] = { counts, &counts[lim.x] };
-
-	int *cnt_rows[SLOTS] = { counts, counts + lim.x };
-	int *brd_rows[SLOTS] = { board[0], board[1] };
+	int *brd_rows[SLOTS] = { NULL, NULL };
+	int *cnt_rows[SLOTS] = { counts, &counts[lim.x] };
 
 	it.y = -1;
 	while (++it.y < lim.y) {
-		int slot = it.y & 1;
-		int next_row = it.y + 1;
-		cnt_rows[CURR] = rows[slot];
-		cnt_rows[NEXT] = rows[slot ^ 1];
-		memset(cnt_rows[NEXT], 0, (size_t)lim.x * sizeof(int));
+		size_t slot = it.y & 1;
 
+		int next_row = it.y + 1;
+		const int has_next_row = (next_row < lim.y);
 		brd_rows[CURR] = board[it.y];
-		brd_rows[NEXT] = (next_row < lim.y) ? board[next_row] : NULL;
+		brd_rows[NEXT] = (has_next_row) ? board[next_row] : NULL;
+
+		cnt_rows[CURR] = &counts[slot * lim.x];
+		cnt_rows[NEXT] = &counts[(slot ^ 1) * lim.x];
 
 		it.x = -1;
 		while (++it.x < lim.x) {
-
-			/* start with accumulated forward counts into (y,x) */
-			int			cnt = cnt_rows[CURR][it.x];
+			int			acc = cnt_rows[CURR][it.x];
 			const int	cell = brd_rows[CURR][it.x];
 
-			int cardinal = E;
-			while (cardinal <= SW) {
-				int dir = cardinal++;
+			/* read-ahead neighbors and push forward contributions */
+			enum e_dir dir = NE;
+			while (++dir < W) {
 				Point pos = {.x = it.x + dx[dir], .y = dy[dir]};
-
-				if (pos.x >= 0 && pos.x < lim.x && pos.y >= 0 && brd_rows[pos.y])
-				{
-					cnt_rows[pos.y][pos.x] += cell;
-					cnt += brd_rows[pos.y][pos.x];
-				}
+				_Bool oob = pos.x < 0 || pos.x >= lim.x || pos.y < 0 ||
+						   pos.y >= SLOTS || !brd_rows[pos.y];
+				if (oob) /* skip OOB and keep going */
+					continue ;
+				cnt_rows[pos.y][pos.x] += cell;
+				acc += brd_rows[pos.y][pos.x];
 			}
-			/* write next state in place */
-//			brd_rows[CURR][it.x] = (cell && (cnt > 1 && cnt < 4)) || (!cell && cnt == 3);
-			brd_rows[CURR][it.x] = (cell ? (cnt == 2 || cnt == 3) : (cnt == 3));
-
+			brd_rows[CURR][it.x] = (cell ? (acc == 2 || acc == 3) : (acc == 3));
 		}
+		memset(cnt_rows[CURR], 0, (size_t)lim.x * sizeof(int));
 	}
 	free(counts);
 }
@@ -290,11 +285,11 @@ int ft_do_test(Case *input)
 	gameOfLife2(rows, board.rows, &board.cols);
 
 
-	check_val = ((expected.cols != board.cols) || (expected.rows != board.cols));
+	check_val = ((expected.cols == board.cols) && (expected.rows == board.rows));
 	if (!check_val)
 	{
-		int result_size = board.cols * board.cols;
-		int expected_size = expected.cols * expected.cols;
+		int result_size = board.cols * board.rows;
+		int expected_size = expected.cols * expected.rows;
 
 		printf("resultTotalSize doesn't match expected value\n");
 		printf("got array of size \"%d\" whilst \"%d\" was to be expected\n",
@@ -334,6 +329,24 @@ int main(void)
 				0, 1, 1,
 				0, 1, 0
 			}, .cols = 3, .rows = 4},
+		},
+		{
+			.grid = {.a = (int[]) {
+				1, 1,
+				1, 0
+			}, .cols = 2, .rows = 2},
+			.expected = {.a = (int[]) {
+				1, 1,
+				1, 1
+			}, .cols = 2, .rows = 2},
+		},
+		{
+			.grid = {.a = (int[]) {
+				0
+			}, .cols = 1, .rows = 1},
+			.expected = {.a = (int[]) {
+				0
+			}, .cols = 1, .rows = 1},
 		},
 	};
 	int cases_size = (int) (sizeof(cases) / sizeof(cases[0]));

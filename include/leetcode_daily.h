@@ -44,7 +44,6 @@ typedef struct Array
 {
 	int *arr;
 	int size;
-	int iter;
 }	Array;
 
 typedef struct TwoDArray
@@ -115,7 +114,7 @@ void segv_handler(int signo)
 	pid_t pid = fork();
 	if (pid == 0) {
 		/* Child: exec crash helper. Pass PID to inspect via /proc. */
-		char pidbuf[32];
+		char pidBuf[32];
 		int len = 0;
 		/* minimal itoa without snprintf to avoid non-signal-safe calls */
 		{
@@ -124,16 +123,16 @@ void segv_handler(int signo)
 			int i = 0;
 			if (p == 0) { tmp[i++] = '0'; }
 			while (p > 0 && i < (int)sizeof(tmp)) {
-				tmp[i++] = '0' + (p % 10);
+				tmp[i++] = (char)('0' + (p % 10));
 				p /= 10;
 			}
-			while (i > 0 && len < (int)sizeof(pidbuf)) {
-				pidbuf[len++] = tmp[--i];
+			while (i > 0 && len < (int)sizeof(pidBuf)) {
+				pidBuf[len++] = tmp[--i];
 			}
-			if (len == 0) { pidbuf[len++] = '0'; }
-			if (len < (int)sizeof(pidbuf)) pidbuf[len++] = '\0';
+			if (len == 0) { pidBuf[len++] = '0'; }
+			if (len < (int)sizeof(pidBuf)) pidBuf[len] = '\0';
 		}
-		const char *argv[] = { "/usr/bin/my-crash-dumper", pidbuf, NULL };
+		const char *argv[] = {"/usr/bin/my-crash-dumper", pidBuf, NULL };
 		execve(argv[0], (char * const *)argv, __environ); /* environ is OK to reuse */
 		_exit(127);
 	}
@@ -154,7 +153,7 @@ void check(bool succes)
 	printf("> %s "FT_RESET"\n", fmt);
 }
 
-int compare_strings(const void* a, const void* b)
+int compare_strings(const void* a, const void* b) // NOLINT(*-easily-swappable-parameters)
 {
 	const char* str1 = *(const char**)a;
 	const char* str2 = *(const char**)b;
@@ -233,7 +232,7 @@ void ft_print_array(Array *a)
 		ft_print_int_tab(a->arr, a->size, NULL);
 }
 
-void ft_print_int_tab_null(int tab[], size_t size, int nil, const char *eol)
+void ft_print_int_tab_null(const int tab[], size_t size, int nil, const char *eol) // NOLINT(*-easily-swappable-parameters)
 {
 	size_t pos;
 	int val;
@@ -284,11 +283,11 @@ struct TreeNode *new_node(int val)
 
 struct TreeNode *deserialize_level_order(int *arr, int size)
 {
-	struct TreeNode	*root = NULL;
-	struct TreeNode	*current;
+	int				i;
+	int				rear = 0;
+	int				front = 0;
+	struct TreeNode	*root = NULL, *current; // NOLINT(*-isolate-declaration)
 	struct TreeNode	*queue[MAX_STACK_SIZE];
-	int				front = 0, rear = 0;
-	int 			i = 0;
 
 	if (size == 0 || arr[0] == null)
 		return NULL;
@@ -296,16 +295,20 @@ struct TreeNode *deserialize_level_order(int *arr, int size)
 	root = new_node(arr[0]);
 	queue[rear++] = root;
 
+	i = 0;
 	while (i < size) // Start from the second element in the array
 	{
-		current = queue[front++]; // Dequeue the front node
+		/* Dequeue the front node */
+		current = queue[front++]; // NOLINT(*-core.uninitialized.Assign)
 
-		if (++i < size && arr[i] != null)
+		i++;
+		if (i < size && arr[i] != null)
 		{
 			current->left = new_node(arr[i]);
 			queue[rear++] = current->left; // Enqueue the left child
 		}
-		if (++i < size && arr[i] != null)
+		i++;
+		if (i < size && arr[i] != null)
 		{
 			current->right = new_node(arr[i]);
 			queue[rear++] = current->right; // Enqueue the right child
@@ -412,7 +415,7 @@ int *serialize_level_order(struct TreeNode *root, int *arraySize)
 #define MAX_HEIGHT 10000
 int lprofile[MAX_HEIGHT];
 int rprofile[MAX_HEIGHT];
-#define INFINITY (1<<20) // hack? this seems defined somewhere.. math.h?
+#define INFINITY (1<<20) // hack? this seems defined somewhere... math.h?
 
 typedef struct asciiTree ASCIITree;
 
@@ -459,14 +462,10 @@ ASCIITree *build_ascii_tree_recursive(TreeNode *t)
 	node->right = build_ascii_tree_recursive(t->right);
 
 	if (node->left != NULL)
-	{
 		node->left->parent_dir = -1;
-	}
 
 	if (node->right != NULL)
-	{
 		node->right->parent_dir = 1;
-	}
 
 	if (t->val != INT_MIN)
 		sprintf(node->label, "%d", t->val);
@@ -524,17 +523,15 @@ void free_ascii_tree(ASCIITree *node)
 // fields have been computed for this tree.
 void compute_lprofile(ASCIITree *node, int x, int y)
 {
-	int i, isleft;
+	int i;
+	int is_left;
 	if (node == NULL)
 		return;
-	isleft = (node->parent_dir == -1);
-	lprofile[y] = MIN(lprofile[y], x - ((node->label_length - isleft) / 2));
-	if (node->left != NULL)
-	{
+	is_left = (node->parent_dir == -1);
+	lprofile[y] = MIN(lprofile[y], x - ((node->label_length - is_left) / 2));
+	if (node->left != NULL) {
 		for (i = 1; i <= node->edge_length && y + i < MAX_HEIGHT; i++)
-		{
 			lprofile[y + i] = MIN(lprofile[y + i], x - i);
-		}
 	}
 	compute_lprofile(node->left, x - node->edge_length - 1,
 					 y + node->edge_length + 1);
@@ -544,17 +541,15 @@ void compute_lprofile(ASCIITree *node, int x, int y)
 
 void compute_rprofile(ASCIITree *node, int x, int y)
 {
-	int i, notleft;
+	int i;
+	int notleft;
 	if (node == NULL)
 		return;
 	notleft = (node->parent_dir != -1);
 	rprofile[y] = MAX(rprofile[y], x + ((node->label_length - notleft) / 2));
-	if (node->right != NULL)
-	{
+	if (node->right != NULL) {
 		for (i = 1; i <= node->edge_length && y + i < MAX_HEIGHT; i++)
-		{
 			rprofile[y + i] = MAX(rprofile[y + i], x + i);
-		}
 	}
 	compute_rprofile(node->left, x - node->edge_length - 1,
 					 y + node->edge_length + 1);
@@ -566,156 +561,147 @@ void compute_rprofile(ASCIITree *node, int x, int y)
 // height fields of the specified tree
 void compute_edge_lengths(ASCIITree *node)
 {
-	int h, hmin, i, delta;
-	if (node == NULL)
-		return;
+	int h;
+	int hmin;
+	int i;
+	int delta;
+
+	if (node == NULL) return;
+
 	compute_edge_lengths(node->left);
 	compute_edge_lengths(node->right);
 
 	/* first fill in the edge_length of node */
 	if (node->right == NULL && node->left == NULL)
-	{
 		node->edge_length = 0;
-	}
 	else
 	{
-		if (node->left != NULL)
-		{
+		if (node->left != NULL) {
 			for (i = 0; i < node->left->height && i < MAX_HEIGHT; i++)
-			{
 				rprofile[i] = -INFINITY;
-			}
 			compute_rprofile(node->left, 0, 0);
 			hmin = node->left->height;
 		}
 		else
-		{
 			hmin = 0;
-		}
-		if (node->right != NULL)
-		{
+
+		if (node->right != NULL) {
 			for (i = 0; i < node->right->height && i < MAX_HEIGHT; i++)
-			{
 				lprofile[i] = INFINITY;
-			}
 			compute_lprofile(node->right, 0, 0);
 			hmin = MIN(node->right->height, hmin);
 		}
 		else
-		{
 			hmin = 0;
-		}
+
 		delta = 4;
 		for (i = 0; i < hmin; i++)
-		{
 			delta = MAX(delta, gap + 1 + rprofile[i] - lprofile[i]);
-		}
+
 		// If the node has two children of height 1, then we allow the
 		// two leaves to be within 1, instead of 2
-		if (((node->left != NULL && node->left->height == 1) ||
-			 (node->right != NULL && node->right->height == 1)) &&
-			delta > 4)
-		{
+		_Bool leftIsOne = node->left != NULL && node->left->height == 1;
+		_Bool rightIsOne = node->right != NULL && node->right->height == 1;
+		if ((leftIsOne || rightIsOne) && delta > 4)
 			delta--;
-		}
 
 		node->edge_length = ((delta + 1) / 2) - 1;
 	}
 
-	// now fill in the height of node
 	h = 1;
 	if (node->left != NULL)
-	{
 		h = MAX(node->left->height + node->edge_length + 1, h);
-	}
 	if (node->right != NULL)
-	{
 		h = MAX(node->right->height + node->edge_length + 1, h);
-	}
 	node->height = h;
 }
 
+static inline
+void emit_branch(int spaces, const char *glyph)
+{
+	int i = -1;
+
+	while (++i < spaces)
+		printf(" ");
+	print_next += i;
+	printf("%s", glyph);
+	print_next++;
+}
+
 // This function prints the given level of the given tree, assuming
-// that the node has the given x cordinate.
+// that the node has the given x coordinate.
 void print_level(ASCIITree *node, int x, int level)
 {
-	int i, isleft;
+	int i;
+	int is_left;
 	if (node == NULL)
 		return;
-	isleft = (node->parent_dir == -1);
+	is_left = (node->parent_dir == -1);
 	if (level == 0)
 	{
-		for (i = 0; i < (x - print_next - ((node->label_length - isleft) / 2)); i++)
-		{
+		int l_length = node->label_length;
+		for (i = 0; i < (x - print_next - ((l_length - is_left) / 2)); i++)
 			printf(" ");
-		}
+
 		print_next += i;
 		printf("%s", node->label);
-		print_next += node->label_length;
-	}
-	else if (node->edge_length >= level)
-	{
-		if (node->left != NULL)
-		{
-			for (i = 0; i < (x - print_next - (level)); i++)
-			{
-				printf(" ");
-			}
-			print_next += i;
-			printf("/");
-			print_next++;
-		}
-		if (node->right != NULL)
-		{
-			for (i = 0; i < (x - print_next + (level)); i++)
-			{
-				printf(" ");
-			}
-			print_next += i;
-			printf("\\");
-			print_next++;
-		}
+		print_next += l_length;
 	}
 	else
 	{
-		print_level(node->left, x - node->edge_length - 1,
-					level - node->edge_length - 1);
-		print_level(node->right, x + node->edge_length + 1,
-					level - node->edge_length - 1);
+		/**
+		 * edge_length - how many spaces (columns) separate the parent node’s
+		 * text and the point where its child branches (/ and \) start,
+		 * aka the length of the “edge” down to each child.
+		 */
+		int e_length = node->edge_length;
+		if (e_length >= level)
+		{
+			if (node->left != NULL)
+				emit_branch(x - print_next - level, "/");
+
+			if (node->right != NULL)
+				emit_branch(x - print_next + level, "\\");
+		}
+		else
+		{
+			print_level(node->left, x - e_length - 1, level - e_length - 1);
+			print_level(node->right, x + e_length + 1, level - e_length - 1);
+		}
 	}
 }
 
 // prints ascii tree for given BinaryTree structure
 void print_tree(struct TreeNode *root)
 {
-	ASCIITree *proot;
-	int xmin, i;
-	if (root == NULL)
-		return;
-	proot = build_ascii_tree(root);
-	compute_edge_lengths(proot);
-	for (i = 0; i < proot->height && i < MAX_HEIGHT; i++)
-	{
+	int			i;
+	int			xmin;
+	ASCIITree	*tree;
+
+	if (root == NULL) return;
+
+	tree = build_ascii_tree(root);
+	compute_edge_lengths(tree);
+	for (i = 0; i < tree->height && i < MAX_HEIGHT; i++)
 		lprofile[i] = INFINITY;
-	}
-	compute_lprofile(proot, 0, 0);
+
+	compute_lprofile(tree, 0, 0);
 	xmin = 0;
-	for (i = 0; i < proot->height && i < MAX_HEIGHT; i++)
-	{
+	for (i = 0; i < tree->height && i < MAX_HEIGHT; i++)
 		xmin = MIN(xmin, lprofile[i]);
-	}
-	for (i = 0; i < proot->height; i++)
+
+	for (i = 0; i < tree->height; i++)
 	{
 		print_next = 0;
-		print_level(proot, -xmin, i);
+		print_level(tree, -xmin, i);
 		printf("\n");
 	}
-	if (proot->height >= MAX_HEIGHT)
+	if (tree->height >= MAX_HEIGHT)
 	{
 		printf("(This tree is taller than %d, and may be drawn incorrectly.)\n",
 			   MAX_HEIGHT);
 	}
-	free_ascii_tree(proot);
+	free_ascii_tree(tree);
 }
 
 #endif //LEETCODE_DAILY_H
