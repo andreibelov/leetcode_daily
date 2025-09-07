@@ -91,8 +91,90 @@ void gameOfLife(int **board, int boardSize, const int *boardColSize)
 	free(counts);
 }
 
+void gameOfLife2(int **board, int boardSize, const int *boardColSize)
+{
+	Point it;
+	Point lim = { .x = boardColSize[0], .y = boardSize };
+
+	enum e_slot { CURR = 0, NEXT, SLOTS };
+	enum e_dir { N = 0, NE, E, SE, S, SW, W, NW, DIR_MAX };
+	static const int dx[DIR_MAX] = {
+		[NW] = -1, [N] =  0, [NE] =  1,
+		[W]  = -1, 			 [E]  =  1,
+		[SW] = -1, [S] =  0, [SE] =  1,
+	};
+	static const int dy[DIR_MAX] = {
+		[NW] = -1, [N] = -1, [NE] = -1,
+		[W]  =  0, 			 [E]  =  0,
+		[SW] =  1, [S] =  1, [SE] =  1,
+	};
+
+	int *counts = (int *)calloc((size_t) lim.x * lim.y, sizeof(int));
+	if (!counts)
+		return (void) (fprintf(stderr, "gameOfLife: alloc failed: %m\n"));
+
+	int *rows[SLOTS] = { counts, &counts[lim.x] };
+
+	int *cnt_rows[SLOTS] = { counts, counts + lim.x };
+	int *brd_rows[SLOTS] = { board[0], board[1] };
+
+	it.y = -1;
+	while (++it.y < lim.y) {
+		int slot = it.y & 1;
+		int next_row = it.y + 1;
+		cnt_rows[CURR] = rows[slot];
+		cnt_rows[NEXT] = rows[slot ^ 1];
+		memset(cnt_rows[NEXT], 0, (size_t)lim.x * sizeof(int));
+
+		brd_rows[CURR] = board[it.y] ? board[it.y] : (int *)&(int[50]){0x00};
+		brd_rows[NEXT] = (next_row < lim.y) ? board[next_row] : NULL;
+
+		it.x = -1;
+		while (++it.x < lim.x) {
+
+			/* start with accumulated forward counts into (y,x) */
+			int			cnt = cnt_rows[CURR][it.x];
+			const int	cell = brd_rows[CURR][it.x];
+
+			/* read-ahead neighbors: E, then S/SW/SE from next row */
+			int next_col = it.x + 1;
+			int prev_col = it.x - 1;
+
+			if (next_col < lim.x)
+			{	/* E */
+				cnt += brd_rows[CURR][next_col];
+				/* forward-propagate this cell's contribution */
+				cnt_rows[CURR][next_col] += cell;
+			}
+
+			if (brd_rows[NEXT]) {
+				if (next_col < lim.x)
+				{ /* SE */
+					cnt += brd_rows[NEXT][next_col];
+					cnt_rows[NEXT][next_col] += cell;
+				}
+				{ /* S  */
+					cnt += brd_rows[NEXT][it.x];
+					cnt_rows[NEXT][it.x] += cell;
+				}
+				if (prev_col >= 0)
+				{ /* SW */
+					cnt += brd_rows[NEXT][prev_col];
+					cnt_rows[NEXT][prev_col] += cell;
+				}
+			}
+
+			/* write next state in place */
+//			brd_rows[CURR][it.x] = (cell && (cnt > 1 && cnt < 4)) || (!cell && cnt == 3);
+			brd_rows[CURR][it.x] = (cell ? (cnt == 2 || cnt == 3) : (cnt == 3));
+
+		}
+	}
+	free(counts);
+}
+
 static inline
-int next(int *iter, Point it, Point *out, Point lim)
+int next(int *iter, Point center, Point *out, Point lim)
 {
 	enum e_dir { N = 0, NE, E, SE, S, SW, W, NW, DIR_MAX };
 
@@ -109,7 +191,7 @@ int next(int *iter, Point it, Point *out, Point lim)
 
 	while (*iter < DIR_MAX) {
 		int dir = (E + (*iter)++) & (DIR_MAX - 1); /* wrap 0..7 */
-		Point pos = {.x = it.x + dx[dir], .y = it.y + dy[dir]};
+		Point pos = {.x = center.x + dx[dir], .y = center.y + dy[dir]};
 		if (pos.x < 0 || pos.x >= lim.x || pos.y < 0 || pos.y >= lim.y)
 			continue; /* skip OOB and keep going */
 		*out = pos;
@@ -118,7 +200,7 @@ int next(int *iter, Point it, Point *out, Point lim)
 	return 0;
 }
 
-void gameOfLife2(int **board, int boardSize, const int *boardColSize)
+void gameOfLife3(int **board, int boardSize, const int *boardColSize)
 {
 	Point lim = {.x = boardColSize[0], .y = boardSize };
 
@@ -222,7 +304,7 @@ int ft_do_test(Case *input)
 	int r = -1;
 	while (++r < board.rows)
 		rows[r] = board.a + (size_t)r * board.cols;
-	gameOfLife(rows, board.rows, &board.cols);
+	gameOfLife2(rows, board.rows, &board.cols);
 
 
 	check_val = ((expected.cols != board.cols) || (expected.rows != board.cols));
