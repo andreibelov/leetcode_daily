@@ -109,7 +109,7 @@ void gameOfLife2(int **board, int boardSize, const int *boardColSize)
 		[SW] =  1, [S] =  1, [SE] =  1,
 	};
 
-	int *counts = (int *)calloc((size_t) lim.x * lim.y, sizeof(int));
+	int *counts = (int *)calloc((size_t) lim.x * SLOTS, sizeof(int));
 	if (!counts)
 		return (void) (fprintf(stderr, "gameOfLife: alloc failed: %m\n"));
 
@@ -126,7 +126,7 @@ void gameOfLife2(int **board, int boardSize, const int *boardColSize)
 		cnt_rows[NEXT] = rows[slot ^ 1];
 		memset(cnt_rows[NEXT], 0, (size_t)lim.x * sizeof(int));
 
-		brd_rows[CURR] = board[it.y] ? board[it.y] : (int *)&(int[50]){0x00};
+		brd_rows[CURR] = board[it.y];
 		brd_rows[NEXT] = (next_row < lim.y) ? board[next_row] : NULL;
 
 		it.x = -1;
@@ -136,34 +136,17 @@ void gameOfLife2(int **board, int boardSize, const int *boardColSize)
 			int			cnt = cnt_rows[CURR][it.x];
 			const int	cell = brd_rows[CURR][it.x];
 
-			/* read-ahead neighbors: E, then S/SW/SE from next row */
-			int next_col = it.x + 1;
-			int prev_col = it.x - 1;
+			int cardinal = E;
+			while (cardinal <= SW) {
+				int dir = cardinal++;
+				Point pos = {.x = it.x + dx[dir], .y = dy[dir]};
 
-			if (next_col < lim.x)
-			{	/* E */
-				cnt += brd_rows[CURR][next_col];
-				/* forward-propagate this cell's contribution */
-				cnt_rows[CURR][next_col] += cell;
-			}
-
-			if (brd_rows[NEXT]) {
-				if (next_col < lim.x)
-				{ /* SE */
-					cnt += brd_rows[NEXT][next_col];
-					cnt_rows[NEXT][next_col] += cell;
-				}
-				{ /* S  */
-					cnt += brd_rows[NEXT][it.x];
-					cnt_rows[NEXT][it.x] += cell;
-				}
-				if (prev_col >= 0)
-				{ /* SW */
-					cnt += brd_rows[NEXT][prev_col];
-					cnt_rows[NEXT][prev_col] += cell;
+				if (pos.x >= 0 && pos.x < lim.x && pos.y >= 0 && brd_rows[pos.y])
+				{
+					cnt_rows[pos.y][pos.x] += cell;
+					cnt += brd_rows[pos.y][pos.x];
 				}
 			}
-
 			/* write next state in place */
 //			brd_rows[CURR][it.x] = (cell && (cnt > 1 && cnt < 4)) || (!cell && cnt == 3);
 			brd_rows[CURR][it.x] = (cell ? (cnt == 2 || cnt == 3) : (cnt == 3));
