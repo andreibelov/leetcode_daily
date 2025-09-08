@@ -27,6 +27,7 @@ gdb.txt
 /pascals_triangle_ii/pascals_triangle_ii
 /rotate_array/rotate_array
 /game_of_life/game_of_life
+/maximal_square/maximal_square
 main
 # From https://stackoverflow.com/questions/15606955/:
 # If you want to list all the files currently being tracked:

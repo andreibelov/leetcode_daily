@@ -59,6 +59,13 @@ typedef struct Grid
 	int	*a;    /* rows * cols, row-major */
 }	Grid;
 
+typedef struct CharGrid
+{
+	int		rows;
+	int		cols;
+	char	*a;    /* rows * cols, row-major */
+}	CharGrid;
+
 typedef struct StringArray
 {
 	char **arr;
@@ -158,6 +165,46 @@ int compare_strings(const void* a, const void* b) // NOLINT(*-easily-swappable-p
 	const char* str1 = *(const char**)a;
 	const char* str2 = *(const char**)b;
 	return strcmp(str1, str2); // Lexicographic comparison
+}
+
+static __attribute__((used,__noinline__))
+int grid_cmp(const Grid *a, const Grid *b)
+{
+	if (a->rows != b->rows)
+		return (a->rows - b->rows);
+	if (a->cols != b->cols)
+		return (a->cols - b->cols);
+	size_t i = 0;
+	size_t n = (size_t) a->rows * (size_t) a->cols;
+	while (i < n)
+	{
+		int da = a->a[i];
+		int db = b->a[i];
+		if (da != db)
+			return (da - db);
+		i++;
+	}
+	return 0;
+}
+
+static __attribute__((used,__noinline__))
+void grid_print(const Grid *g)
+{
+	int row = -1;
+	while (++row < g->rows)
+	{
+		int *grid_row = &g->a[(size_t)row * g->cols];
+
+		int coll = -1;
+		printf("[");
+		while (++coll < g->cols)
+		{
+			printf("%d", grid_row[coll]);
+			if (coll + 1 < g->cols)
+				printf(" ");
+		}
+		printf("]\n");
+	}
 }
 
 int arraycmp(Array *p, Array *q)
@@ -443,12 +490,6 @@ struct asciiTree
 };
 
 int print_next;
-
-int MIN(int X, int Y)
-{ return ((X) < (Y)) ? (X) : (Y); }
-
-int MAX(int X, int Y)
-{ return ((X) > (Y)) ? (X) : (Y); }
 
 ASCIITree *build_ascii_tree_recursive(TreeNode *t)
 {

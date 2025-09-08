@@ -228,50 +228,9 @@ typedef struct s_input
 	Grid expected;
 }	Case;
 
-static int grid_cmp(const Grid *a, const Grid *b)
-{
-	if (a->rows != b->rows)
-		return (a->rows - b->rows);
-	if (a->cols != b->cols)
-		return (a->cols - b->cols);
-	size_t i = 0;
-	size_t n = (size_t) a->rows * (size_t) a->cols;
-	while (i < n)
-	{
-		int da = a->a[i];
-		int db = b->a[i];
-		if (da != db)
-			return (da - db);
-		i++;
-	}
-	return 0;
-}
-
-static void grid_print(const Grid *g)
-{
-	int row = -1;
-	while (++row < g->rows)
-	{
-		int *grid_row = &g->a[(size_t)row * g->cols];
-
-		int coll = -1;
-		printf("[");
-		while (++coll < g->cols)
-		{
-			printf("%d", grid_row[coll]);
-			if (coll + 1 < g->cols)
-				printf(" ");
-		}
-		printf("]\n");
-	}
-}
-
 int ft_do_test(Case *input)
 {
 	int check_val;
-
-//	printf("Initial:\n");
-//	grid_print(&input->board);
 
 	Grid board = input->grid;
 	Grid expected = input->expected;
@@ -283,7 +242,6 @@ int ft_do_test(Case *input)
 	while (++r < board.rows)
 		rows[r] = board.a + (size_t)r * board.cols;
 	gameOfLife2(rows, board.rows, &board.cols);
-
 
 	check_val = ((expected.cols == board.cols) && (expected.rows == board.rows));
 	if (!check_val)
