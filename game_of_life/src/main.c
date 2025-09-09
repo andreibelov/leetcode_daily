@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include <stddef.h>
-
+#include <sys/param.h>
 #include "leetcode_daily.h"
 
 typedef struct s_point {
@@ -114,19 +114,21 @@ void gameOfLife2(int **board, int boardSize, const int *boardColSize)
 		return (void) (fprintf(stderr, "gameOfLife: alloc failed: %m\n"));
 
 	int *brd_rows[SLOTS] = { NULL, NULL };
-	int *cnt_rows[SLOTS] = { counts, &counts[lim.x] };
+	int *cnt_rows[SLOTS] = { counts, counts + lim.x };
 
 	it.y = -1;
 	while (++it.y < lim.y) {
-		size_t slot = it.y & 1;
+		/* parity slot trick */
+		size_t curr = it.y & 1;
+		size_t prev = curr ^ 1;
 
 		int next_row = it.y + 1;
 		const int has_next_row = (next_row < lim.y);
 		brd_rows[CURR] = board[it.y];
 		brd_rows[NEXT] = (has_next_row) ? board[next_row] : NULL;
 
-		cnt_rows[CURR] = &counts[slot * lim.x];
-		cnt_rows[NEXT] = &counts[(slot ^ 1) * lim.x];
+		cnt_rows[CURR] = &counts[curr * lim.x];
+		cnt_rows[NEXT] = &counts[prev * lim.x];
 
 		it.x = -1;
 		while (++it.x < lim.x) {
